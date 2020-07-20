@@ -38,7 +38,7 @@ class Motor():
 
 class IR():
 
-      def __init__(self, x, y, angle, range = (3,30), cone_angle = DEFAULT_CONE_ANGLE):
+      def __init__(self, x, y, angle, range = (3,20), cone_angle = DEFAULT_CONE_ANGLE):
             self.xy = np.array([x,y])
             self.range = range
             self.cone_angle = cone_angle
@@ -228,7 +228,8 @@ def calculate(goal_angle, current_angle):
       global features
       B = features['breadth']
       r = features['wheel_radius']
-      nd = 0.5*B*(goal_angle - current_angle) / ( 720*r )
+      N = features['encoder_ticks']
+      nd = 0.5*B*(goal_angle - current_angle) *N / ( 720*r )
       return -nd, nd
 
 
@@ -255,47 +256,29 @@ sim_time = 0.0
 plt.ion()
 
 r1 = MobileRobot(126.0,56.0,120.0)
-# r2 = MobileRobot(148.0,126.0,23.0)
 rpm = 50
-kp = 700
+kp = 1
 
 while True:
       sim_time += dt
       plt.cla()
 
       r1.plot_robot()
-      # r2.plot_robot()
 
       Z1 = np.array(r1.get_ir_measurments())
-      # Z2 = np.array(r2.get_ir_measurments())
 
       x1 = r1.angle
-      # x2 = r2.angle
-
       angles1 = np.array([x1,x1+25,x1+50,x1+75,x1+100,x1-25,x1-50,x1-75,x1-100])
-      # angles2 = np.array([x2,x2+25,x2+50,x2+75,x2+100,x2-25,x2-50,x2-75,x2-100])
-
       goal_angle1 = Z1.dot(angles1)/ sum(Z1)
-      # goal_angle2 = Z2.dot(angles2)/ sum(Z2)
-
       n11, n21 = calculate(goal_angle1, r1.angle)
-      # n12, n22 = calculate(goal_angle2, r2.angle)
 
       r1.left_motor.rpm = rpm + kp * (n11)
       r1.right_motor.rpm = rpm + kp * (n21)
 
-      # r2.left_motor.rpm = rpm + kp * (n12)
-      # r2.right_motor.rpm = rpm + kp * (n22)
-
       r1.left_motor.run()
       r1.right_motor.run()
 
-      # r2.left_motor.run()
-      # r2.right_motor.run()
-
       r1.update()
-      # r2.update()
-
       plt.title(f'simulation time :{sim_time//1}')
       plt.show()
       plt.pause(0.001)
